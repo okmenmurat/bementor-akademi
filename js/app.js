@@ -10,6 +10,7 @@ window.App = (() => {
   const M = id => D.mentors.find(m => m.id === id) || D.mentors[0];
   const C = id => D.courses.find(c => c.id === id) || D.courses[0];
   const catName = id => (D.categories.find(c => c.id === id) || {}).name || id;
+  const matchCat = (c, catId) => !catId || catId === 'all' || c.category === catId || c.subCategory === catId;
   const stars = r => `<span class="st">${Array.from({ length: 5 }, (_, i) => ic('star', i < Math.round(r) ? 'i-fill' : '')).join('')}</span>`;
 
   const S = {
@@ -20,14 +21,14 @@ window.App = (() => {
     spotProg: 32,
     spotTimer: null,
     seriesPage: 0,
-    mentor: 0, // slot=(i - S.mentor + 4)%4 -> i=1 (Doç. Dr. Aylin Demir) is in slot 1 (Active Center)
+    mentor: 0,
     mentorHover: false,
     popTab: 'all',
     cart: [],
-    owned: ['c2'],
+    owned: [],
     wish: [],
     coupon: false,
-    done: { 'c2-1': true },
+    done: {},
     fCats: new Set(),
     fLevels: new Set(),
     fTop: false,
@@ -40,7 +41,9 @@ window.App = (() => {
     notes: {},
     qa: {},
     subscription: null, // null | 'student' | 'dentist'
-    selectedSubPkg: 'student'
+    selectedSubPkg: 'student',
+    pbId: 'pb-endo',
+    pbSlide: 0
   };
 
   /* ---------------- Router ---------------- */
@@ -79,7 +82,7 @@ window.App = (() => {
       $('#mega-cats').innerHTML = D.categories.map(c => `
         <a onclick="App.go('catalog',{cat:'${c.id}'})">
           <span class="ico">${ic(c.icon)}</span>
-          <div><strong>${c.name}</strong><span>${c.count} video eğitim</span></div>
+          <div><strong>${c.name}</strong><span>${c.count} eğitim</span></div>
         </a>`).join('');
     }
   }
@@ -99,41 +102,39 @@ window.App = (() => {
     const list = spots();
     const c = list[S.spot % list.length];
     const m = M(c.mentorId);
-    const total = c.curriculum[0]?.lessons[1]?.d || '24:16';
-    const [tm, ts] = total.split(':').map(Number);
-    const sec = Math.round((tm * 60 + ts) * S.spotProg / 100);
+    const total = c.curriculum[0]?.lessons[1]?.d || '30:00';
+    const parts = total.split(':').map(Number);
+    const totalSecs = parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : (parts[0] || 25) * 60 + (parts[1] || 0);
+    const sec = Math.round(totalSecs * S.spotProg / 100);
     const cur = `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
 
     $('#spot').innerHTML = `
       <div class="spot-info">
-        <span class="tag">${ic('sparkle')}SPOTLIGHT</span>
+        <span class="tag">${ic('sparkle')}${c.badge || 'ÖNE ÇIKAN EĞİTİM'}</span>
         <h3 class="spot-title">${c.title}</h3>
         <p class="spot-desc">${c.subtitle}</p>
         <div class="spot-meta">
-          <span>${ic('film')}${c.lessons} Bölüm</span>
-          <span>${ic('clock')}${c.hours}</span>
-          <span>${ic('star')}${c.rating} (${c.reviews})</span>
+          <span>${ic('clock')}${c.dateText || c.hours}</span>
+          <span>${ic('layers')}${c.formatLabel || catName(c.category)}</span>
         </div>
         <div class="spot-foot">
           <div class="person">
             <img src="${m.photo}" alt="${m.name}">
-            <div><b>${m.title} ${m.name}</b><small>${m.specialty}</small></div>
+            <div><b>${m.title} ${m.name}</b><small>${c.coMentor ? `+ ${c.coMentor}` : m.specialty}</small></div>
           </div>
-          <button class="go-btn" aria-label="Seriye git" onclick="App.detail('${c.id}')">${ic('arrow')}</button>
+          <button class="go-btn" aria-label="Eğitime git" onclick="App.detail('${c.id}')">${ic('arrow')}</button>
         </div>
       </div>
       <div class="spot-media">
         <img src="${c.image}" alt="${c.title}">
-        <button class="play-big" onclick="App.spotPlay()" aria-label="Önizlemeyi Oynat">
-          ${S.spotPlaying ? ic('pause', 'i-fill') : ic('play', 'i-fill')}
+        <button class="play-big" onclick="App.detail('${c.id}')" aria-label="Eğitimi İncele">
+          ${ic('play', 'i-fill')}
         </button>
         <div class="vbar">
-          <button onclick="App.spotPlay()">${S.spotPlaying ? ic('pause', 'i-fill') : ic('play', 'i-fill')}</button>
-          <span>${cur} / ${total}</span>
+          <button onclick="App.detail('${c.id}')">${ic('play', 'i-fill')}</button>
+          <span>${c.locationText || 'BeMentor Akademi'}</span>
           <div class="vtrack" onclick="App.detail('${c.id}')"><i style="width:${S.spotProg}%"></i></div>
-          <button onclick="App.player('${c.id}')">${ic('vol')}</button>
-          <span class="hd">HD</span>
-          <button onclick="App.player('${c.id}')">${ic('full')}</button>
+          <span class="hd">${tl(c.price)} ${c.taxNote || ''}</span>
         </div>
       </div>`;
 
@@ -164,11 +165,11 @@ window.App = (() => {
     renderSpot();
   }
 
-  /* ---------------- Home: Video Serileri (3-Column Reference Cards + Dots) ---------------- */
+  /* ---------------- Home: Öne Çıkan Eğitimler (3-Column Reference Cards + Dots) ---------------- */
   function renderSeries() {
     let pool = S.homeCat === 'all'
       ? [...D.courses.filter(c => c.homeSeries), ...D.courses.filter(c => !c.homeSeries)]
-      : D.courses.filter(c => c.category === S.homeCat);
+      : D.courses.filter(c => matchCat(c, S.homeCat));
     if (!pool.length) pool = D.courses;
 
     const start = (S.seriesPage * 3) % pool.length;
@@ -181,8 +182,8 @@ window.App = (() => {
         <img class="bg" src="${c.image}" alt="${c.title}">
         <div class="series-in">
           <div class="chips">
-            <span class="chip lav">${ic('play', 'i-fill')}Video Serisi</span>
-            <span class="chip">${c.lessons} Bölüm</span>
+            <span class="chip lav">${ic('play', 'i-fill')}${c.formatLabel || catName(c.category)}</span>
+            <span class="chip">${c.badge || c.hours}</span>
           </div>
           <div class="series-mid">
             <h3>${c.title}</h3>
@@ -191,9 +192,9 @@ window.App = (() => {
           <div class="series-foot">
             <div class="person">
               <img src="${m.photo}" alt="${m.name}">
-              <div><b>${m.title} ${m.name}</b></div>
+              <div><b>${m.title} ${m.name}</b><small style="display:block;font-size:10.5px;color:var(--lav-200)">${c.dateText || ''}</small></div>
             </div>
-            <span class="series-price-tag">${tl(c.price)} →</span>
+            <span class="series-price-tag">${tl(c.price)} ${c.taxNote || ''} →</span>
           </div>
         </div>
       </article>`;
@@ -201,7 +202,7 @@ window.App = (() => {
 
     const dotsEl = $('#series-dots');
     if (dotsEl) {
-      dotsEl.innerHTML = [0, 1, 2].map(p =>
+      dotsEl.innerHTML = [0, 1, 2, 3, 4].map(p =>
         `<button class="${p === S.seriesPage ? 'on' : ''}" onclick="App.setSeriesPage(${p})" aria-label="Sayfa ${p + 1}"></button>`
       ).join('');
     }
@@ -218,7 +219,6 @@ window.App = (() => {
     if (!stageEl) return;
     const n = D.mentors.length;
 
-    // Build DOM cards once so CSS transitions glide smoothly between slots!
     if (!stageEl.children.length) {
       stageEl.innerHTML = D.mentors.map((m, i) => `
         <div class="m-card" data-idx="${i}" onclick="App.onMentorClick(${i})">
@@ -245,10 +245,8 @@ window.App = (() => {
     const n = D.mentors.length;
     const slot = ((idx - S.mentor) % n + n) % n;
     if (slot === 1) {
-      // Already in the active center spotlight slot -> open catalog
       go('catalog');
     } else {
-      // Bring clicked mentor into slot 1 (Active Center)
       S.mentor = (idx - 1 + n) % n;
       renderStage();
     }
@@ -269,12 +267,13 @@ window.App = (() => {
   /* ---------------- Course Card (Marketplace) ---------------- */
   function card(c, mode = 'shop') {
     const m = M(c.mentorId);
-    const own = S.owned.includes(c.id);
+    const own = S.owned.includes(c.id) || (S.subscription && c.freeForSubscribers);
     const inCart = S.cart.includes(c.id);
     const lessons = c.curriculum.flatMap(x => x.lessons);
     const done = lessons.filter(l => S.done[l.id]).length;
     const pct = Math.round(done / Math.max(lessons.length, 1) * 100);
-    const effPrice = S.subscription ? Math.round(c.price * 0.8) : c.price;
+    const effPrice = S.subscription ? (c.freeForSubscribers ? 0 : Math.round(c.price * 0.8)) : c.price;
+    const isReq = c.status === 'oneToOne' || c.status === 'past' || c.status === 'full';
 
     const foot = mode === 'learn'
       ? `<div style="flex:1">
@@ -285,24 +284,29 @@ window.App = (() => {
          </div>
          <button class="go-btn" style="width:40px;height:40px" onclick="App.player('${c.id}')" aria-label="Devam et">${ic('play', 'i-fill')}</button>`
       : own
-        ? `<span class="owned">${ic('check')}Kütüphanende</span>
+        ? `<span class="owned">${ic('check')}${S.subscription && c.freeForSubscribers ? 'Aboneye Ücretsiz' : 'Kütüphanende'}</span>
            <button class="btn btn-lav btn-sm" onclick="App.player('${c.id}')">İzle ${ic('play', 'i-fill')}</button>`
-        : `<div class="price"><b>${tl(effPrice)}</b><s>${tl(S.subscription ? c.price : c.oldPrice)}</s>${S.subscription ? `<span class="sub-disc-pill">-%20 Abone</span>` : ''}</div>
-           <button class="add-btn ${inCart ? 'in' : ''}" onclick="App.add('${c.id}')" title="Sepete Ekle" aria-label="Sepete ekle">${ic(inCart ? 'check' : 'plus')}</button>`;
+        : isReq
+          ? `<div class="price"><b>${tl(effPrice)}</b><small style="font-size:10.5px;color:var(--ink-2);margin-left:3px">${c.taxNote || ''}</small></div>
+             <button class="btn btn-outline btn-sm" style="--h:34px;padding:0 12px;font-size:11.5px" onclick="App.openRequestModal('${c.title.replace(/'/g, "\\'")}')">Talep Oluştur</button>`
+          : `<div class="price"><b>${tl(effPrice)}</b><small style="font-size:10.5px;color:var(--ink-2);margin-left:2px">${c.taxNote || ''}</small>${S.subscription ? `<span class="sub-disc-pill">-%20 Abone</span>` : ''}</div>
+             <button class="add-btn ${inCart ? 'in' : ''}" onclick="App.add('${c.id}')" title="Sepete Ekle" aria-label="Sepete ekle">${ic(inCart ? 'check' : 'plus')}</button>`;
 
     return `
     <article class="card">
       <div class="card-media" onclick="App.detail('${c.id}')">
         <img src="${c.image}" alt="${c.title}">
-        <div class="chips">${c.badge ? `<span class="chip ${c.badge === 'En Çok Satan' ? 'gold' : 'lav'}">${c.badge}</span>` : ''}</div>
+        <div class="chips">${c.badge ? `<span class="chip ${c.status === 'active' ? 'gold' : 'lav'}">${c.badge}</span>` : ''}</div>
         <span class="chip dur">${ic('clock')}${c.hours}</span>
       </div>
       ${mode !== 'learn' ? `<button class="wish ${S.wish.includes(c.id) ? 'on' : ''}" onclick="App.wishToggle('${c.id}', this)" aria-label="Favorilere ekle">${ic('heart')}</button>` : ''}
       <div class="card-body">
-        <span class="card-cat">${catName(c.category)} · ${c.lessons} Bölüm</span>
+        <span class="card-cat">${c.formatLabel || catName(c.category)}</span>
         <h3 class="card-title" onclick="App.detail('${c.id}')">${c.title}</h3>
-        <span class="card-mentor">${m.title} ${m.name}</span>
-        ${mode !== 'learn' ? `<div class="rating"><b>${c.rating}</b>${stars(c.rating)}<small>(${c.reviews})</small></div>` : ''}
+        <span class="card-mentor">${m.title} ${m.name}${c.coMentor ? ` & ${c.coMentor}` : ''}</span>
+        <div style="font-size:11.5px;color:var(--lav-200);margin:2px 0 6px;display:flex;align-items:center;gap:5px">
+          ${ic('clock')}<span>${c.dateText || c.locationText || ''}</span>
+        </div>
         <div class="card-foot">${foot}</div>
       </div>
     </article>`;
@@ -311,22 +315,114 @@ window.App = (() => {
   /* ---------------- Popular Marketplace Tabs ---------------- */
   function renderPop() {
     const tabs = [
-      ['all', 'Tümü'],
-      ['implantoloji', 'İmplantoloji'],
-      ['restoratif', 'Restoratif'],
+      ['all', 'Tümü (17)'],
+      ['online', 'Online Eğitimler (8)'],
+      ['yuzyuze', 'Yüz Yüze & Workshop (7)'],
+      ['birebir', 'Birebir 1’e 1 (2)'],
       ['endodonti', 'Endodonti'],
-      ['protetik', 'Protetik'],
-      ['cerrahi', 'Cerrahi']
+      ['cerrahi', 'Cerrahi & İmplant'],
+      ['protetik', 'Protetik & Restoratif']
     ];
     $('#pop-tabs').innerHTML = tabs.map(([id, n]) =>
       `<button class="tab ${S.popTab === id ? 'on' : ''}" onclick="App.popTab('${id}')">${n}</button>`
     ).join('');
 
     let list = [...D.courses];
-    if (S.popTab !== 'all') list = list.filter(c => c.category === S.popTab);
-    $('#pop-grid').innerHTML = list.slice(0, 4).map(c => card(c)).join('') || '<div class="empty">Bu branşta yakında yeni seriler eklenecek.</div>';
+    if (S.popTab !== 'all') list = list.filter(c => matchCat(c, S.popTab));
+    $('#pop-grid').innerHTML = list.slice(0, 8).map(c => card(c)).join('') || '<div class="empty">Bu branşta yakında yeni seriler eklenecek.</div>';
   }
   function popTab(id) { S.popTab = id; renderPop(); }
+
+  /* ---------------- Playbooks (4 Klinik Cep Rehberi) ---------------- */
+  function renderPlaybooks() {
+    const el = $('#playbook-grid');
+    if (!el || !D.playbooks) return;
+    el.innerHTML = D.playbooks.map(pb => `
+      <article class="card" onclick="App.openPlaybook('${pb.id}')" style="cursor:pointer">
+        <div class="card-media" style="aspect-ratio: 4 / 4.2">
+          <img src="${pb.cover}" alt="${pb.title}">
+          <div class="chips"><span class="chip lav">${pb.category}</span></div>
+          <span class="chip dur">${pb.slides.length} Slayt</span>
+        </div>
+        <div class="card-body">
+          <span class="card-cat">${pb.badge}</span>
+          <h3 class="card-title">${pb.title}</h3>
+          <span class="card-mentor">${pb.subtitle}</span>
+          <div class="card-foot" style="margin-top:10px">
+            <span style="font-size:12px;font-weight:700;color:var(--lav-200)">Rehberi Aç (6 Slayt)</span>
+            <button class="go-btn" style="width:34px;height:34px" aria-label="Rehberi İncele">${ic('arrow')}</button>
+          </div>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  function openPlaybook(id) {
+    const pb = (D.playbooks || []).find(x => x.id === id);
+    if (!pb) return;
+    S.pbId = pb.id;
+    S.pbSlide = 0;
+    updatePlaybookModal();
+    $('#playbook-modal')?.classList.add('open');
+    $('#scrim')?.classList.add('open');
+  }
+
+  function updatePlaybookModal() {
+    const pb = (D.playbooks || []).find(x => x.id === S.pbId);
+    if (!pb) return;
+    const total = pb.slides.length;
+    const idx = ((S.pbSlide % total) + total) % total;
+    S.pbSlide = idx;
+    if ($('#pb-modal-cat')) $('#pb-modal-cat').textContent = pb.category + ' · ' + pb.subtitle;
+    if ($('#pb-modal-title')) $('#pb-modal-title').textContent = pb.title;
+    if ($('#pb-modal-counter')) $('#pb-modal-counter').textContent = `${idx + 1} / ${total}`;
+    if ($('#pb-modal-img')) $('#pb-modal-img').src = pb.slides[idx];
+    if ($('#pb-modal-dots')) {
+      $('#pb-modal-dots').innerHTML = pb.slides.map((_, i) =>
+        `<button class="${i === idx ? 'on' : ''}" onclick="App.setPlaybookSlide(${i})" aria-label="Slayt ${i + 1}"></button>`
+      ).join('');
+    }
+  }
+
+  function stepPlaybook(step) {
+    S.pbSlide += step;
+    updatePlaybookModal();
+  }
+
+  function setPlaybookSlide(i) {
+    S.pbSlide = i;
+    updatePlaybookModal();
+  }
+
+  function closePlaybook() {
+    $('#playbook-modal')?.classList.remove('open');
+    $('#scrim')?.classList.remove('open');
+  }
+
+  /* ---------------- Talep Oluştur / Ön Kayıt Modalı ---------------- */
+  function openRequestModal(courseTitle) {
+    const modal = $('#req-modal');
+    if (!modal) return;
+    if ($('#req-course-name')) $('#req-course-name').textContent = courseTitle || 'BeMentor Akademi Eğitim Talebi';
+    if ($('#req-wa-link')) {
+      const msg = encodeURIComponent(`Merhaba BeMentor Akademi, "${courseTitle || 'Eğitim'}" hakkında bilgi almak ve talep oluşturmak istiyorum.`);
+      $('#req-wa-link').href = `https://api.whatsapp.com/send/?phone=905015599141&text=${msg}&type=phone_number&app_absent=0`;
+    }
+    modal.classList.add('open');
+    $('#scrim')?.classList.add('open');
+  }
+
+  function closeRequestModal() {
+    $('#req-modal')?.classList.remove('open');
+    $('#scrim')?.classList.remove('open');
+  }
+
+  function submitRequestModal(e) {
+    e.preventDefault();
+    const courseName = $('#req-course-name')?.textContent || 'Eğitim';
+    closeRequestModal();
+    toast(`"${courseName}" için talebiniz alındı! Ekibimiz en kısa sürede dönüş yapacaktır.`);
+  }
 
   /* ---------------- Modüller (Multi-Course Bundles) ---------------- */
   function renderBundles() {
@@ -337,12 +433,13 @@ window.App = (() => {
       <div class="bundle-card">
         <div class="chips">
           <span class="chip lav">${b.badge}</span>
-          <span class="chip">${items.length} Seri · ${b.hours}</span>
+          <span class="chip">${items.length} Eğitim · ${b.hours}</span>
         </div>
         <h3>${b.title}</h3>
         <p style="font-size:13px; color:var(--ink-2); line-height:1.55;">${b.desc}</p>
         <div class="bundle-items">
-          ${items.map(c => `<div class="bundle-item">${ic('check')}<span>${c.title}</span></div>`).join('')}
+          ${items.slice(0, 4).map(c => `<div class="bundle-item">${ic('check')}<span>${c.title}</span></div>`).join('')}
+          ${items.length > 4 ? `<div class="bundle-item">${ic('plus')}<span>+${items.length - 4} online seminer daha</span></div>` : ''}
         </div>
         <div style="display:flex; align-items:center; justify-content:space-between; margin-top:auto; padding-top:6px;">
           <div class="price"><b>${tl(b.price)}</b><s>${tl(b.oldPrice)}</s></div>
@@ -360,7 +457,7 @@ window.App = (() => {
     });
     refresh();
     cart(true);
-    toast('Modüldeki tüm seriler sepetinize eklendi!');
+    toast('Paketteki eğitimler sepetinize eklendi!');
   }
 
   function renderQuotes() {
@@ -376,8 +473,8 @@ window.App = (() => {
     const check = (group, val, label, count, on) => `
       <label class="check"><input type="checkbox" ${on ? 'checked' : ''} onchange="App.filter('${group}','${val}')"><span class="box">${ic('check')}</span><span class="lbl">${label}</span>${count != null ? `<em>${count}</em>` : ''}</label>`;
     $('#filters').innerHTML = `
-      <h6>Branş</h6>
-      ${D.categories.filter(c => c.id !== 'all').map(c => check('cat', c.id, c.name, D.courses.filter(x => x.category === c.id).length, S.fCats.has(c.id))).join('')}
+      <h6>Format &amp; Branş</h6>
+      ${D.categories.filter(c => c.id !== 'all').map(c => check('cat', c.id, c.name, D.courses.filter(x => matchCat(x, c.id)).length, S.fCats.has(c.id))).join('')}
       <h6>Seviye</h6>
       ${levels.map(l => check('level', l, l, null, S.fLevels.has(l))).join('')}
       <h6>Puan</h6>
@@ -398,13 +495,14 @@ window.App = (() => {
     const sort = $('#sort')?.value || 'popular';
     let list = D.courses.filter(c => {
       const m = M(c.mentorId);
-      const hay = `${c.title} ${c.subtitle} ${m.name} ${catName(c.category)}`.toLocaleLowerCase('tr');
-      return (!q || hay.includes(q)) && (!S.fCats.size || S.fCats.has(c.category)) && (!S.fLevels.size || S.fLevels.has(c.level)) && (!S.fTop || c.rating >= 4.9);
+      const hay = `${c.title} ${c.subtitle} ${m.name} ${c.coMentor || ''} ${c.locationText || ''} ${catName(c.category)}`.toLocaleLowerCase('tr');
+      const catOk = !S.fCats.size || [...S.fCats].some(catId => matchCat(c, catId));
+      return (!q || hay.includes(q)) && catOk && (!S.fLevels.size || S.fLevels.has(c.level)) && (!S.fTop || c.rating >= 4.9);
     });
     const sorters = {
-      popular: (a, b) => b.students - a.students,
+      popular: (a, b) => (a.status === 'active' ? -1 : 1) - (b.status === 'active' ? -1 : 1) || b.students - a.students,
       rating: (a, b) => b.rating - a.rating || b.reviews - a.reviews,
-      new: (a, b) => (b.badge?.startsWith('Yeni') ? 1 : 0) - (a.badge?.startsWith('Yeni') ? 1 : 0),
+      new: (a, b) => (b.status === 'active' ? 1 : 0) - (a.status === 'active' ? 1 : 0),
       asc: (a, b) => a.price - b.price,
       desc: (a, b) => b.price - a.price
     };
@@ -419,10 +517,11 @@ window.App = (() => {
   function detail(id) {
     const c = C(id);
     const m = M(c.mentorId);
-    const own = S.owned.includes(id);
+    const own = S.owned.includes(id) || (S.subscription && c.freeForSubscribers);
     const inCart = S.cart.includes(id);
     const all = c.curriculum.flatMap(x => x.lessons);
     const off = Math.round((1 - c.price / c.oldPrice) * 100);
+    const isReq = c.status === 'oneToOne' || c.status === 'past' || c.status === 'full';
 
     $('#view-detail').innerHTML = `
       <div class="detail-hero">
@@ -430,26 +529,30 @@ window.App = (() => {
         <div class="wrap">
           <div class="crumbs"><a onclick="App.go('home')">Anasayfa</a>${ic('chev-r')}<a onclick="App.go('catalog')">Eğitimler</a>${ic('chev-r')}<a onclick="App.go('catalog',{cat:'${c.category}'})">${catName(c.category)}</a></div>
           <div class="detail-grid"><div>
-            <div class="chips">${c.badge ? `<span class="chip ${c.badge === 'En Çok Satan' ? 'gold' : 'lav'}">${c.badge}</span>` : ''}<span class="chip">${c.level}</span></div>
+            <div class="chips">
+              ${c.badge ? `<span class="chip ${c.status === 'active' ? 'gold' : 'lav'}">${c.badge}</span>` : ''}
+              <span class="chip">${c.formatLabel || c.level}</span>
+              ${c.statusText ? `<span class="chip">${c.statusText}</span>` : ''}
+            </div>
             <h1>${c.title}</h1>
             <p class="lead">${c.subtitle}</p>
             <div class="meta-row">
+              <span>${ic('clock')}<b>Tarih / Süre:</b> ${c.dateText || c.hours}</span>
+              <span>${ic('layers')}<b>Konum:</b> ${c.locationText || 'Online'}</span>
               <span class="rating"><b>${c.rating}</b>${stars(c.rating)}<small>(${c.reviews} değerlendirme)</small></span>
-              <span>${ic('users')}${new Intl.NumberFormat('tr-TR').format(c.students)} hekim</span>
-              <span>${ic('clock')}Son güncelleme: ${c.updated}</span>
             </div>
-            <div class="person" style="margin-top:20px"><img src="${m.photo}" alt=""><div><small>Eğitmen Mentör</small><b>${m.title} ${m.name}</b></div></div>
+            <div class="person" style="margin-top:20px"><img src="${m.photo}" alt=""><div><small>Eğitmen Mentör</small><b>${m.title} ${m.name}${c.coMentor ? ` & ${c.coMentor}` : ''}</b></div></div>
           </div><div></div></div>
         </div>
       </div>
       <div class="wrap" style="padding-top:32px">
         <div class="detail-grid">
           <div>
-            <div class="block"><h3>Bu seride neler öğreneceksiniz?</h3><ul class="learn">${c.learn.map(x => `<li>${ic('check')}<span>${x}</span></li>`).join('')}</ul></div>
+            <div class="block"><h3>Eğitim İçeriği &amp; Kazanımlar</h3><ul class="learn">${c.learn.map(x => `<li>${ic('check')}<span>${x}</span></li>`).join('')}</ul></div>
             <div class="block">
               <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;margin-bottom:16px">
-                <h3 style="margin:0">Eğitim Müfredatı</h3>
-                <span class="muted" style="font-size:13px">${c.curriculum.length} bölüm · ${all.length} ders · ${c.hours}</span>
+                <h3 style="margin:0">Eğitim Programı &amp; Müfredat</h3>
+                <span class="muted" style="font-size:13px">${c.curriculum.length} bölüm · ${all.length} başlık · ${c.hours}</span>
               </div>
               ${c.curriculum.map((sec, si) => `
                 <div class="acc ${si === 0 ? 'open' : ''}">
@@ -458,10 +561,10 @@ window.App = (() => {
                     <span style="display:flex;gap:12px;align-items:center"><small>${sec.lessons.length} ders</small>${ic('chev')}</span>
                   </div>
                   <div class="acc-b">${sec.lessons.map(l => `
-                    <div class="lesson" onclick="${l.pv || own ? `App.player('${c.id}','${l.id}')` : `App.toast('Bu ders satın alım sonrası açılır.','lock')`}">
+                    <div class="lesson" onclick="${l.pv || own ? `App.player('${c.id}','${l.id}')` : `App.toast('Bu oturum kayıt/satın alım sonrası açılır.','lock')`}">
                       ${ic(l.pv || own ? 'play' : 'lock')}
                       <span class="lt">${l.t}</span>
-                      ${l.pv && !own ? '<span class="pv">Ücretsiz Önizle</span>' : ''}
+                      ${l.pv && !own ? '<span class="pv">Önizleme Açık</span>' : ''}
                       <span class="d">${l.d}</span>
                     </div>`).join('')}</div>
                 </div>`).join('')}
@@ -469,7 +572,7 @@ window.App = (() => {
             <div class="block"><h3>Mentörünüz</h3>
               <div class="instructor"><img src="${m.photo}" alt="">
                 <div><h4>${m.title} ${m.name}</h4><div class="spec">${m.specialty}</div><p>${m.bio}</p>
-                <div class="nums"><span><b>${m.rating}</b> puan</span><span><b>${m.students}</b> öğrenci</span><span><b>${m.courses}</b> seri</span></div></div>
+                <div class="nums"><span><b>${m.rating}</b> puan</span><span><b>${m.students}</b> katılımcı</span><span><b>${m.courses}</b> eğitim</span></div></div>
               </div>
             </div>
           </div>
@@ -477,23 +580,27 @@ window.App = (() => {
             <div class="buy-media" onclick="App.player('${c.id}')">
               <img src="${c.image}" alt="">
               <button class="play-big" aria-label="Önizle">${ic('play', 'i-fill')}</button>
-              <span class="lbl">Ücretsiz önizlemeyi izle</span>
+              <span class="lbl">Eğitim detayını &amp; önizlemeyi aç</span>
             </div>
             <div class="buy-body">
               ${own
-                ? `<div class="owned" style="margin-bottom:14px">${ic('check')}Bu seri kütüphanende</div>
-                   <button class="btn btn-lav btn-lg btn-block" onclick="App.player('${c.id}')">Eğitime Devam Et ${ic('arrow')}</button>`
-                : `<div class="price"><b>${tl(c.price)}</b><s>${tl(c.oldPrice)}</s><span class="off">%${off} indirim</span></div>
-                   <div class="timer">${ic('clock')}Özel lansman fiyatı</div>
-                   <button class="btn btn-lav btn-lg btn-block" style="margin-bottom:8px" onclick="App.add('${c.id}', true)">${inCart ? 'Sepete Git' : 'Sepete Ekle'} ${ic('arrow')}</button>
-                   <button class="btn btn-outline btn-block" onclick="App.buyNow('${c.id}')">Hemen Satın Al</button>
-                   <p class="guarantee">14 gün koşulsuz iade garantisi</p>`}
+                ? `<div class="owned" style="margin-bottom:14px">${ic('check')}${S.subscription && c.freeForSubscribers ? 'BeMentor Abonelerine Ücretsiz!' : 'Bu eğitim kütüphanende'}</div>
+                   <button class="btn btn-lav btn-lg btn-block" onclick="App.player('${c.id}')">Eğitime Git ${ic('arrow')}</button>`
+                : `<div class="price"><b>${tl(c.price)}</b> <small style="font-size:13px;color:var(--lav-200)">${c.taxNote || ''}</small> <s>${tl(c.oldPrice)}</s><span class="off">%${off} avantaj</span></div>
+                   <div class="timer">${ic('clock')}${c.dateText || c.statusText}</div>
+                   ${c.freeForSubscribers ? `<div style="margin-bottom:12px;padding:10px 12px;border-radius:12px;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.35);font-size:12.5px;color:var(--green);font-weight:700;cursor:pointer" onclick="App.go('subscription')">✨ BeMentor Akademi abonelerine özel ücretsiz! (Abone Ol →)</div>` : ''}
+                   ${isReq
+                     ? `<button class="btn btn-lav btn-lg btn-block" style="margin-bottom:8px" onclick="App.openRequestModal('${c.title.replace(/'/g, "\\'")}')">Talep Oluştur / Ön Kayıt ${ic('arrow')}</button>
+                        <button class="btn btn-outline btn-block" onclick="App.add('${c.id}', true)">${inCart ? 'Sepete Git' : 'Sepete Ekle'}</button>`
+                     : `<button class="btn btn-lav btn-lg btn-block" style="margin-bottom:8px" onclick="App.add('${c.id}', true)">${inCart ? 'Sepete Git' : 'Kayıt Ol / Sepete Ekle'} ${ic('arrow')}</button>
+                        <button class="btn btn-outline btn-block" onclick="App.buyNow('${c.id}')">Hemen Kayıt Ol</button>`}
+                   <p class="guarantee">Sorularınız için WhatsApp: 0501 559 91 41</p>`}
               <ul>
-                <li>${ic('film')}${c.lessons} bölüm 4K video · ${c.hours}</li>
-                <li>${ic('device')}Mobil, tablet ve masaüstü erişim</li>
-                <li>${ic('chat')}Mentora doğrudan soru sorma</li>
-                <li>${ic('award')}BE Mentor Akademi onaylı sertifika</li>
-                <li>${ic('shield')}Ömür boyu sınırsız erişim</li>
+                <li>${ic('clock')}${c.dateText || c.hours}</li>
+                <li>${ic('layers')}Konum: ${c.locationText || 'Online'}</li>
+                <li>${ic('chat')}Mentör ile doğrudan vaka &amp; soru-cevap</li>
+                <li>${ic('award')}BeMentor Akademi Katılım Sertifikası</li>
+                <li>${ic('shield')}Klinik uygulamaya yönelik müfredat</li>
               </ul>
             </div>
           </aside>
@@ -929,6 +1036,7 @@ window.App = (() => {
     renderSeries();
     renderStage();
     renderPop();
+    renderPlaybooks();
     renderBundles();
     renderSubscriptions();
     renderQuotes();
@@ -970,7 +1078,7 @@ window.App = (() => {
     }, 3400);
 
     addEventListener('keydown', e => {
-      if (e.key === 'Escape') { cart(false); auth(false); subModal(false); closePhoto(); }
+      if (e.key === 'Escape') { cart(false); auth(false); subModal(false); closePhoto(); closePlaybook(); closeRequestModal(); }
     });
 
     const drop = $('#drop');
@@ -985,6 +1093,8 @@ window.App = (() => {
   return {
     go, toSection, selectDockCat, spot, spotTo, spotPlay, setSeriesPage,
     popTab, mentor, mentorTo, onMentorClick,
+    renderPlaybooks, openPlaybook, stepPlaybook, setPlaybookSlide, closePlaybook,
+    openRequestModal, closeRequestModal, submitRequestModal,
     addBundle, filter, clearFilters, renderCatalog, detail, player, pPlay, pSeek,
     markDone, nextLesson, pTab: setPTab, note, ask, fakeUpload, publish,
     add, buyNow, remove, cart, coupon, checkout, wishToggle, auth, toast,
