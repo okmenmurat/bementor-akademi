@@ -79,6 +79,9 @@
         <div class="mega" id="mega-cats"></div>
       </div>
       <div class="menu-item">
+        <button class="menu-link" onclick="App.toSection('playbooks')">Playbooklar</button>
+      </div>
+      <div class="menu-item">
         <button class="menu-link" onclick="App.toSection('bundles')">Modüller <svg class="i"><use href="#i-chev"/></svg></button>
       </div>
       <div class="menu-item"><button class="menu-link" onclick="App.toSection('mentors')">Mentörler</button></div>
@@ -90,7 +93,7 @@
         <span id="nav-sub-label">Abonelik</span>
       </button>
       <button class="icon-btn" aria-label="Eğitim Ara" onclick="App.go('catalog', { focus: true })"><svg class="i"><use href="#i-search"/></svg></button>
-      <button class="icon-btn" aria-label="Bildirimler" onclick="App.toast('Yeni seri yayında: Klinik Restoratif Serisi')"><svg class="i"><use href="#i-bell"/></svg><span class="dot"></span></button>
+      <button class="icon-btn" aria-label="Bildirimler" onclick="App.toast('Yeni Eğitim: Oral Cerrahide Kanama Riski ve Yönetimi · 16 Aralık 20:00')"><svg class="i"><use href="#i-bell"/></svg><span class="dot"></span></button>
       <button class="icon-btn" aria-label="Sepetim" onclick="App.cart(true)"><svg class="i"><use href="#i-bag"/></svg><span class="count" id="cart-count" data-n="0">0</span></button>
       <button class="btn btn-outline btn-sm" onclick="App.auth(true, 'login')">Giriş Yap</button>
       <button class="btn btn-lav btn-sm" onclick="App.auth(true, 'register')">Üye Ol <svg class="i"><use href="#i-arrow"/></svg></button>
@@ -140,7 +143,7 @@
       <div class="wrap">
         <div class="format-grid">
           <!-- Kart 1: YÜZ YÜZE EĞİTİMLER -->
-          <article class="format-card" onclick="App.go('catalog')" tabindex="0" role="button">
+          <article class="format-card" onclick="App.go('catalog', { cat: 'yuzyuze' })" tabindex="0" role="button">
             <span class="format-glow" aria-hidden="true"></span>
             <div class="format-card-top">
               <div class="format-ico-box">
@@ -155,13 +158,13 @@
             <span class="format-rule" aria-hidden="true"></span>
             <p class="format-desc">Uzman eğitmenler eşliğinde klinik ortamda gerçekleşen yüz yüze eğitimlerimiz, uygulamalı alıştırmalarla pratik becerilerinizi doğrudan güçlendirir.</p>
             <div class="format-foot">
-              <span>Klinik &amp; Uygulamalı</span>
+              <span>7 Workshop &amp; Hands-On</span>
               <span class="format-arrow"><svg class="i"><use href="#i-arrow"/></svg></span>
             </div>
           </article>
 
           <!-- Kart 2: ONLINE EĞİTİMLER -->
-          <article class="format-card" onclick="App.go('catalog')" tabindex="0" role="button">
+          <article class="format-card" onclick="App.go('catalog', { cat: 'online' })" tabindex="0" role="button">
             <span class="format-glow" aria-hidden="true"></span>
             <div class="format-card-top">
               <div class="format-ico-box">
@@ -176,13 +179,13 @@
             <span class="format-rule" aria-hidden="true"></span>
             <p class="format-desc">Esnek zamanlı ve etkileşimli online eğitimlerimiz, canlı oturumlar ve kapsamlı materyallerle teorik bilginizi her yerden geliştirme imkânı sunar.</p>
             <div class="format-foot">
-              <span>Canlı &amp; 4K İnteraktif</span>
+              <span>8 Canlı &amp; Arşiv Seminer</span>
               <span class="format-arrow"><svg class="i"><use href="#i-arrow"/></svg></span>
             </div>
           </article>
 
           <!-- Kart 3: BİREBİR EĞİTİMLER -->
-          <article class="format-card" onclick="App.go('catalog')" tabindex="0" role="button">
+          <article class="format-card" onclick="App.go('catalog', { cat: 'birebir' })" tabindex="0" role="button">
             <span class="format-glow" aria-hidden="true"></span>
             <div class="format-card-top">
               <div class="format-ico-box">
@@ -197,7 +200,7 @@
             <span class="format-rule" aria-hidden="true"></span>
             <p class="format-desc">Kişiye özel öğrenim planı ve doğrudan mentorluk sunan birebir eğitimlerimiz, ihtiyaçlarınıza yönelik hızlı ve derinlemesine ilerleme sağlar.</p>
             <div class="format-foot">
-              <span>Kişiye Özel Mentorluk</span>
+              <span>1’e 1 Kişiye Özel Kurs</span>
               <span class="format-arrow"><svg class="i"><use href="#i-arrow"/></svg></span>
             </div>
           </article>
@@ -274,15 +277,15 @@
       </div>
     </div>
 
-    <!-- VIDEO SERİLERİ (Exact 3-Column Reference Layout + Dots) -->
+    <!-- ÖNE ÇIKAN EĞİTİMLER (Exact 3-Column Reference Layout + Dots) -->
     <div class="section" style="padding-top:48px">
       <div class="wrap">
         <div class="sec-head">
           <div class="sec-head-l">
-            <h2 class="h-section">Video Serileri</h2>
-            <p>Klinik pratiğe odaklanan, güncel ve kapsamlı video eğitim serileri.</p>
+            <h2 class="h-section">Öne Çıkan Eğitimler</h2>
+            <p>Online seminerler, 1’e 1 birebir mentorluk ve uygulamalı yüz yüze workshoplar.</p>
           </div>
-          <button class="link-arrow" onclick="App.go('catalog')">Tüm Serileri Gör <svg class="i"><use href="#i-arrow"/></svg></button>
+          <button class="link-arrow" onclick="App.go('catalog')">Tüm Eğitimleri Gör (17) <svg class="i"><use href="#i-arrow"/></svg></button>
         </div>
         <div class="series-grid" id="series-grid"></div>
         <div class="dots" id="series-dots"></div>
@@ -295,8 +298,8 @@
         <div class="mentors-copy">
           <span class="eyebrow">Uzman mentörler<br />gerçek klinik deneyimi aktarımı</span>
           <h2 class="h-section" style="font-size:clamp(32px,3.6vw,46px); margin-top:14px">Mentorlarımız</h2>
-          <p>Alanında uzman, kliniğiyle ve akademik birikimiyle fark yaratan mentörlerle öğren.</p>
-          <button class="btn btn-lav" onclick="App.go('catalog')">Tüm Mentörleri Gör <svg class="i"><use href="#i-arrow"/></svg></button>
+          <p>Doç. Dr. Burçin Arıcan Alpay, Doç. Dr. Ezgi Yüceer Çetiner, Prof. Dr. Selçuk Basa ve uzman eğitmen kadromuzla tanışın.</p>
+          <button class="btn btn-lav" onclick="App.go('catalog')">Eğitmenlerin Kurslarını Gör <svg class="i"><use href="#i-arrow"/></svg></button>
         </div>
         <div class="stage" id="mentor-stage-wrap">
           <button class="circle-btn" aria-label="Önceki mentor" onclick="App.mentor(-1)"><svg class="i"><use href="#i-arrow-l"/></svg></button>
@@ -310,26 +313,42 @@
     <div class="section" style="padding-top:46px">
       <div class="wrap">
         <div class="stats">
-          <div class="stat"><svg class="i"><use href="#i-cap"/></svg><div><b>10.000+</b><small>Aktif Öğrenci</small></div></div>
-          <div class="stat"><svg class="i"><use href="#i-film"/></svg><div><b>200+</b><small>Video Eğitim</small></div></div>
-          <div class="stat"><svg class="i"><use href="#i-layers"/></svg><div><b>15+</b><small>Kapsamlı Seri</small></div></div>
-          <div class="stat"><svg class="i"><use href="#i-users"/></svg><div><b>50+</b><small>Uzman Mentor</small></div></div>
-          <div class="stat"><svg class="i"><use href="#i-star"/></svg><div><b>4.9/5</b><small>Katılımcı Memnuniyeti</small></div></div>
+          <div class="stat"><svg class="i"><use href="#i-cap"/></svg><div><b>3.000+</b><small>Katılımcı Hekim</small></div></div>
+          <div class="stat"><svg class="i"><use href="#i-film"/></svg><div><b>17</b><small>Aktif &amp; Arşiv Eğitim</small></div></div>
+          <div class="stat"><svg class="i"><use href="#i-layers"/></svg><div><b>4</b><small>Klinik Playbook</small></div></div>
+          <div class="stat"><svg class="i"><use href="#i-users"/></svg><div><b>1’e 1</b><small>Birebir Mentorluk</small></div></div>
+          <div class="stat"><svg class="i"><use href="#i-star"/></svg><div><b>4.9/5</b><small>Hekim Memnuniyeti</small></div></div>
         </div>
       </div>
     </div>
 
-    <!-- POPÜLER EĞİTİMLER (Udemy Marketplace Section) -->
+    <!-- TÜM EĞİTİMLER VİTRİNİ (Yeni & Geçmiş Eğitimler) -->
     <div class="section" id="sec-popular">
       <div class="wrap">
         <div class="sec-head">
           <div>
-            <span class="eyebrow" style="margin-bottom:8px; display:flex">Tekil Satın Alma &amp; Hemen İzle</span>
-            <h2 class="h-section">Popüler Eğitim Kataloğu</h2>
+            <span class="eyebrow" style="margin-bottom:8px; display:flex">Yeni &amp; Geçmiş Tüm Eğitimlerimiz</span>
+            <h2 class="h-section">Eğitim Kataloğu</h2>
           </div>
           <div class="tabs" id="pop-tabs"></div>
         </div>
         <div class="grid-4" id="pop-grid"></div>
+        <div style="text-align:center; margin-top:26px">
+          <button class="btn btn-outline btn-lg" onclick="App.go('catalog')">17 Eğitimin Tamamını İncele <svg class="i"><use href="#i-arrow"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KLİNİK PLAYBOOKLAR (Endo, Perio, Surgery, Prostho) -->
+    <div class="section" id="sec-playbooks">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="sec-head-l">
+            <h2 class="h-section">Klinik Playbooklar</h2>
+            <p>Klinikte adım adım başvurabileceğiniz görsel cep rehberleri — tıklayın ve 6 slaytlık rehberi inceleyin.</p>
+          </div>
+        </div>
+        <div class="grid-4" id="playbook-grid"></div>
       </div>
     </div>
 
@@ -338,8 +357,8 @@
       <div class="wrap">
         <div class="sec-head">
           <div class="sec-head-l">
-            <h2 class="h-section">Klinik Uzmanlık Modülleri</h2>
-            <p>Birden fazla video serisini %30 paket avantajıyla tek seferde kütüphanenize ekleyin.</p>
+            <h2 class="h-section">Kombine Eğitim Paketleri</h2>
+            <p>Birden fazla eğitimi ve seminer arşivini paket avantajıyla tek seferde edinin.</p>
           </div>
         </div>
         <div class="bundle-grid" id="bundle-grid"></div>
@@ -352,7 +371,7 @@
         <div class="sec-head">
           <div class="sec-head-l">
             <h2 class="h-section">Hekimlerimiz Anlatıyor</h2>
-            <p>Türkiye’nin dört bir yanından 10.000+ diş hekimi BE Mentor ile gelişiyor.</p>
+            <p>Yüz yüze workshop, birebir kurs ve online seminer katılımcılarımızın deneyimleri.</p>
           </div>
         </div>
         <div class="quotes" id="quotes"></div>
@@ -363,10 +382,10 @@
     <div class="section">
       <div class="wrap">
         <div class="cta-band">
-          <h3>Bir sonraki vakanız, <em>en iyi vakanız</em> olsun.</h3>
+          <h3>Deneyimden <em>ilham alın.</em></h3>
           <div class="btns">
-            <button class="btn btn-lav btn-lg" onclick="App.auth(true, 'register')">Ücretsiz Üye Ol <svg class="i"><use href="#i-arrow"/></svg></button>
-            <button class="btn btn-outline btn-lg" onclick="App.go('catalog')">Eğitimlere Göz At</button>
+            <button class="btn btn-lav btn-lg" onclick="App.go('subscription')">Abonelik Paketlerini İncele <svg class="i"><use href="#i-arrow"/></svg></button>
+            <a class="btn btn-outline btn-lg" href="https://api.whatsapp.com/send/?phone=905015599141&text=Merhaba%20BeMentor%20Akademi%2C%20e%C4%9Fitimler%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum.&type=phone_number&app_absent=0" target="_blank" rel="noopener">WhatsApp: 0501 559 91 41</a>
           </div>
         </div>
       </div>
@@ -378,7 +397,7 @@
     <div class="wrap">
       <div class="page-head">
         <div class="crumbs"><a onclick="App.go('home')">Anasayfa</a><svg class="i"><use href="#i-chev-r"/></svg><span>Eğitimler</span></div>
-        <h1 class="page-title">Tüm <em>online eğitimler</em></h1>
+        <h1 class="page-title">Tüm <em>Eğitimlerimiz</em></h1>
       </div>
       <div class="catalog">
         <aside class="filters" id="filters"></aside>
@@ -724,27 +743,35 @@
     <div class="foot-grid">
       <div>
         <a class="logo" onclick="App.go('home')"><img src="assets/be-logo.png" alt="BE" /><span class="logo-text"><b>BE MENTOR</b><b>AKADEMİ</b><i>Online</i></span></a>
-        <p class="foot-about">Diş hekimliğinde klinik pratiği, güncel literatürü ve uzman mentörlüğü buluşturan yeni nesil online akademi.</p>
-        <div class="socials"><a aria-label="Instagram"><svg class="i"><use href="#i-insta"/></svg></a><a aria-label="YouTube"><svg class="i"><use href="#i-yt"/></svg></a><a aria-label="LinkedIn"><svg class="i"><use href="#i-in"/></svg></a></div>
+        <p class="foot-about">Deneyimden İlham Alın. Yüz yüze, online ve birebir eğitimlerle diş hekimliğinde sürekli gelişim.</p>
+        <div style="font-size:12.5px; color:var(--ink-2); margin-bottom:12px; display:grid; gap:4px">
+          <span>📍 İstanbul / Türkiye</span>
+          <a href="https://api.whatsapp.com/send/?phone=905015599141&text&type=phone_number&app_absent=0" target="_blank" rel="noopener" style="color:#fff; font-weight:600">📞 WhatsApp: 0501 559 91 41</a>
+          <a href="mailto:info@bementorakademi.com" style="color:var(--lav-200)">✉️ info@bementorakademi.com</a>
+        </div>
+        <div class="socials">
+          <a href="https://www.instagram.com/abementor/" target="_blank" rel="noopener" aria-label="Instagram @abementor"><svg class="i"><use href="#i-insta"/></svg></a>
+          <a href="https://api.whatsapp.com/send/?phone=905015599141&text&type=phone_number&app_absent=0" target="_blank" rel="noopener" aria-label="WhatsApp"><svg class="i"><use href="#i-chat"/></svg></a>
+        </div>
       </div>
-      <div><h5>Platform</h5><ul><li onclick="App.go('subscription')">Abonelik</li><li onclick="App.go('catalog')">Tüm Eğitimler</li><li onclick="App.toSection('bundles')">Uzmanlık Modülleri</li><li onclick="App.go('learning')">Eğitimlerim</li><li onclick="App.go('studio')">Video Yükle (Eğitmen)</li></ul></div>
-      <div><h5>Branşlar</h5><ul><li onclick="App.go('catalog',{cat:'implantoloji'})">İmplantoloji</li><li onclick="App.go('catalog',{cat:'restoratif'})">Restoratif</li><li onclick="App.go('catalog',{cat:'endodonti'})">Endodonti</li><li onclick="App.go('catalog',{cat:'dijital'})">Dijital Diş Hekimliği</li></ul></div>
-      <div><h5>Kurumsal</h5><ul><li onclick="App.go('about')">Hakkımızda</li><li>Sertifika Doğrulama</li><li>İade Politikası</li><li>KVKK &amp; Gizlilik</li></ul></div>
+      <div><h5>Eğitim Formatları</h5><ul><li onclick="App.go('catalog',{cat:'online'})">Online Eğitimler (8)</li><li onclick="App.go('catalog',{cat:'yuzyuze'})">Yüz Yüze &amp; Workshop (7)</li><li onclick="App.go('catalog',{cat:'birebir'})">Birebir 1’e 1 Kurslar (2)</li><li onclick="App.toSection('playbooks')">Klinik Playbooklar (4)</li><li onclick="App.go('subscription')">Abonelik Paketleri</li></ul></div>
+      <div><h5>Branşlar</h5><ul><li onclick="App.go('catalog',{cat:'endodonti'})">Endodonti</li><li onclick="App.go('catalog',{cat:'cerrahi'})">Cerrahi &amp; İmplantoloji</li><li onclick="App.go('catalog',{cat:'protetik'})">Restoratif &amp; Protetik</li><li onclick="App.go('catalog',{cat:'pedodonti'})">Pedodonti &amp; Perio</li></ul></div>
+      <div><h5>Kurumsal</h5><ul><li onclick="App.go('about')">Hakkımızda</li><li onclick="App.toSection('mentors')">Mentörlerimiz</li><li onclick="App.openRequestModal('Vaka Danışmanlığı / Bilgi Talebi')">İletişim &amp; Talep Oluştur</li><li>KVKK &amp; Gizlilik</li></ul></div>
       <div>
         <h5>Akademi Bülteni</h5>
-        <p class="muted" style="font-size:13px; margin-bottom:10px">Yeni klinik vaka serileri ve erken kayıt indirimlerinden haberdar olun.</p>
-        <form class="newsletter" onsubmit="event.preventDefault(); App.toast('Bültene abone oldunuz.'); this.reset()"><input type="email" required placeholder="E-posta adresiniz" /><button class="btn btn-lav btn-sm">Abone Ol</button></form>
+        <p class="muted" style="font-size:13px; margin-bottom:10px">Yeni yüz yüze workshoplar, online seminerler ve kontenjan duyurularından ilk siz haberdar olun.</p>
+        <form class="newsletter" onsubmit="event.preventDefault(); App.toast('Bültene kaydınız alındı.'); this.reset()"><input type="email" required placeholder="E-posta adresiniz" /><button class="btn btn-lav btn-sm">Abone Ol</button></form>
       </div>
     </div>
     <div class="foot-bottom">
-      <span>© 2026 BE Mentor Akademi · online.bementorakademi.com</span>
+      <span>© 2026 BE Mentor Akademi · www.bementorakademi.com · info@bementorakademi.com</span>
       <div class="pay-logos"><span>iyzico</span><span>VISA</span><span>MASTERCARD</span><span>TROY</span><span>256-BIT SSL</span></div>
     </div>
   </div>
 </footer>
 
 <!-- ============ CART DRAWER ============ -->
-<div class="scrim" id="scrim" onclick="App.cart(false); App.auth(false); App.subModal(false); App.closePhoto()"></div>
+<div class="scrim" id="scrim" onclick="App.cart(false); App.auth(false); App.subModal(false); App.closePlaybook(); App.closeRequestModal()"></div>
 <aside class="drawer" id="drawer" aria-label="Sepet">
   <div class="drawer-h"><h3>Sepetim</h3><button class="circle-btn" onclick="App.cart(false)" aria-label="Kapat"><svg class="i"><use href="#i-x"/></svg></button></div>
   <div class="drawer-b" id="cart-list"></div>
@@ -821,12 +848,50 @@
   </div>
 </div>
 
-<!-- ============ PHOTO LIGHTBOX MODAL ============ -->
-<div class="modal" id="photo-modal" onclick="if(event.target===this) App.closePhoto()">
-  <div class="photo-modal-box">
-    <button class="circle-btn modal-close" onclick="App.closePhoto()" aria-label="Kapat"><svg class="i"><use href="#i-x"/></svg></button>
-    <img id="photo-modal-img" src="" alt="BeMentor Akademi" />
-    <p id="photo-modal-cap"></p>
+<!-- ============ PLAYBOOK SLIDE READER MODAL ============ -->
+<div class="modal" id="playbook-modal" onclick="if(event.target===this) App.closePlaybook()">
+  <div class="photo-modal-box playbook-modal-box">
+    <button class="circle-btn modal-close" onclick="App.closePlaybook()" aria-label="Kapat"><svg class="i"><use href="#i-x"/></svg></button>
+    <div class="pb-modal-head">
+      <div>
+        <span class="sub-pkg-eyebrow" id="pb-modal-cat">Klinik Playbook</span>
+        <h3 id="pb-modal-title" style="font-family:var(--f-serif); font-style:italic; font-size:24px; color:#fff">Playbook</h3>
+      </div>
+      <span class="chip lav" id="pb-modal-counter">1 / 6</span>
+    </div>
+    <div class="pb-stage">
+      <button class="circle-btn" onclick="App.stepPlaybook(-1)" aria-label="Önceki slayt"><svg class="i"><use href="#i-arrow-l"/></svg></button>
+      <img id="pb-modal-img" src="" alt="BeMentor Akademi Playbook" />
+      <button class="circle-btn" onclick="App.stepPlaybook(1)" aria-label="Sonraki slayt"><svg class="i"><use href="#i-arrow"/></svg></button>
+    </div>
+    <div class="dots" id="pb-modal-dots" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ============ TALEP OLUŞTUR / ÖN KAYIT MODAL ============ -->
+<div class="modal" id="req-modal" onclick="if(event.target===this) App.closeRequestModal()">
+  <div class="modal-card">
+    <button class="circle-btn modal-close" onclick="App.closeRequestModal()" aria-label="Kapat"><svg class="i"><use href="#i-x"/></svg></button>
+    <div class="modal-side">
+      <img src="assets/be-logo.png" alt="BE" style="height:44px; width:auto; margin-bottom:auto" />
+      <h3>Deneyimden <em>İlham Alın.</em></h3>
+      <p>1’e 1 birebir kurslar ve yüz yüze workshoplar için tarih planlaması ve ön kayıt talebinizi iletin.</p>
+      <div style="margin-top:16px; font-size:12.5px; color:var(--lav-200)">
+        <div>📞 WhatsApp: <b>0501 559 91 41</b></div>
+        <div>✉️ <b>info@bementorakademi.com</b></div>
+      </div>
+    </div>
+    <form class="modal-main" onsubmit="App.submitRequestModal(event)">
+      <h4>Talep &amp; Ön Kayıt Formu</h4>
+      <p class="muted" id="req-course-name" style="font-size:13px; color:var(--lav-200); font-weight:600; margin-bottom:10px"></p>
+      <div class="field"><label>Ad Soyad &amp; Unvan</label><input class="input" id="req-name" required placeholder="Dt. Ad Soyad" /></div>
+      <div class="field"><label>Telefon (WhatsApp)</label><input class="input" id="req-phone" type="tel" required placeholder="05XX XXX XX XX" /></div>
+      <div class="field"><label>E-posta</label><input class="input" id="req-email" type="email" required placeholder="ornek@klinik.com" /></div>
+      <div class="field"><label>Notunuz / Tercih Ettiğiniz Tarih</label><input class="input" id="req-note" placeholder="Birebir eğitim veya yeni dönem workshop talebi..." /></div>
+      <button class="btn btn-lav btn-lg btn-block" type="submit">Talebi Gönder <svg class="i"><use href="#i-arrow"/></svg></button>
+      <div class="or">veya</div>
+      <a class="btn btn-outline btn-block" id="req-wa-link" href="https://api.whatsapp.com/send/?phone=905015599141&text&type=phone_number&app_absent=0" target="_blank" rel="noopener">WhatsApp Üzerinden Hemen Yaz (0501 559 91 41)</a>
+    </form>
   </div>
 </div>
 
